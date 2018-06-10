@@ -18,13 +18,13 @@ void ofxFTPServer::start(int port, string publish_dir, string username, string p
 						CFtpServer::LIST | CFtpServer::DELETEFILE | CFtpServer::CREATEDIR |
 						CFtpServer::DELETEDIR);
 	
-	if (server.StartListening(INADDR_ANY, port))
-	{
-		if (!server.StartAccepting())
-			ofLogError("ofxFTPServer", "server couldn't start");
-	}
-	else
-		ofLogError("ofxFTPServer", "port is already used");
+    if (server.StartListening(INADDR_ANY, port))
+    {
+        if (!server.StartAccepting())
+            ofLogError("ofxFTPServer", "server couldn't start");
+    }
+    else
+        ofLogError("ofxFTPServer", "port is already used");
 }
 
 
@@ -167,6 +167,58 @@ int ofxFTPClient::get(string fileName, string localFolder, string remoteFolder)
         return -1;
     }
 }
+
+
+/*--- add by shugohirao ---*/
+ofBuffer ofxFTPClient::getBuffer(string fileName, string remoteFolder)
+{
+    ofBuffer resultBuffer;
+    if( bSetup == false ){
+        if( bVerbose )printf("error - you need to call setup first\n");
+        resultBuffer.clear();
+        return resultBuffer;
+    }
+
+    int numBytes = 0;
+
+    try{
+        startFtpSesssion();
+
+        if( bVerbose )printf("ftp-ing %s\n", fileName.c_str());
+
+        if(remoteFolder.length() > 0){
+            if( remoteFolder[remoteFolder.length()-1] != '/' ){
+                remoteFolder += "/";
+            }
+        }
+
+        string remotePath   = remoteFolder + fileName;
+
+        ostringstream remoteOSS;
+        remoteOSS << remoteFolder << fileName;
+
+        if( bVerbose )printf("remotepath is %s\n", remotePath.c_str());
+
+        ftpClient->login(user, pass);
+        ftpClient->setFileType(Poco::Net::FTPClientSession::TYPE_BINARY);
+        istream& ftpOStream = ftpClient->beginDownload(remoteOSS.str().c_str());
+        resultBuffer.set(ftpOStream);
+        numBytes = resultBuffer.size();
+        ftpClient->endDownload();
+        endFtpSession();
+
+        if(bVerbose)printf("downloaded %i bytes\n\n", numBytes);
+        return resultBuffer;
+    }
+    catch (Poco::Exception& exc)
+    {
+        cout << exc.displayText() << endl;
+        resultBuffer.clear();
+        return resultBuffer;
+    }
+}
+/*--- add end ---*/
+
 
 vector<string> ofxFTPClient::list(string path)
 {
