@@ -24,6 +24,7 @@ public:
 	void setup(string _host, string username = "anonymous", string password = "", int _port = 21);
 	int send(string fileName, string localFolder, string remoteFolder);
 	int get(string fileName, string localFolder, string remoteFolder);
+    	ofBuffer getBuffer(string fileName, string remoteFolder); /*--- add ---*/
 	vector<string> list(string path);
 	void setVerbose(bool verbose);
 private:
